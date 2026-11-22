@@ -7,7 +7,7 @@ A template for 3d visualisation.
 todo
 
 ## How to use
-0. [Try on Pages](https://deviancevxxxxm.github.io/koipond/)
+0. [Try on Pages](https://deviancevxxxxm.github.io/prism_template/)
    
    or
    
