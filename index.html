@@ -1,0 +1,1423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>3D Scene Modular Template — DEViANCE DESIGN Labs</title>
+<style>
+  :root {
+    --bg-base: #06080b;
+    --panel-bg: rgba(12, 16, 22, 0.72);
+    --panel-border: rgba(255, 255, 255, 0.08);
+    --panel-border-focus: rgba(94, 234, 212, 0.35);
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-tertiary: #64748b;
+    --accent: #5eead4;
+    --accent-glow: rgba(94, 234, 212, 0.22);
+    --accent-gradient: linear-gradient(135deg, #5eead4, #818cf8);
+    --danger: #f43f5e;
+    --radius-lg: 16px;
+    --radius-md: 10px;
+    --radius-sm: 6px;
+    --shadow-elevation: 0 20px 40px -15px rgba(0, 0, 0, 0.7), 0 0 1px 1px rgba(255,255,255,0.06);
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: var(--bg-base);
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+  }
+
+  canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    touch-action: none;
+    cursor: grab;
+  }
+  canvas:active { cursor: grabbing; }
+
+  /* Vignette & cinematic grading overlay */
+  .cinematic-vignette {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+    background: radial-gradient(circle at center, transparent 55%, rgba(4, 6, 9, 0.7) 100%);
+  }
+
+  /* TOP NAVIGATION BAR */
+  .top-bar {
+    position: fixed;
+    top: 18px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    pointer-events: none;
+    z-index: 20;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  .top-bar > * { pointer-events: auto; }
+
+  .brand-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--panel-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--panel-border);
+    padding: 8px 16px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-elevation);
+  }
+  .brand-badge {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+    animation: pulseGlow 2.5s infinite;
+  }
+  @keyframes pulseGlow {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.6; }
+  }
+  .brand-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-transform: uppercase;
+  }
+  .brand-sub {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    border-left: 1px solid var(--panel-border);
+    padding-left: 10px;
+  }
+
+  .fps-pill {
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(94, 234, 212, 0.1);
+    padding: 3px 8px;
+    border-radius: 12px;
+    border: 1px solid rgba(94, 234, 212, 0.2);
+  }
+
+  .top-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-md);
+    background: var(--panel-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--panel-border);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: var(--shadow-elevation);
+  }
+  .icon-btn:hover {
+    color: var(--text-primary);
+    border-color: var(--panel-border-focus);
+    background: rgba(20, 26, 36, 0.85);
+    transform: translateY(-1px);
+  }
+  .icon-btn:active { transform: translateY(1px); }
+  .icon-btn svg { width: 18px; height: 18px; fill: currentColor; }
+
+  /* CAMERA PRESETS QUICK DOCK */
+  .camera-dock {
+    position: fixed;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--panel-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 6px;
+    border-radius: 40px;
+    border: 1px solid var(--panel-border);
+    box-shadow: var(--shadow-elevation);
+    z-index: 20;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  .cam-tab {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 11.5px;
+    font-weight: 500;
+    padding: 7px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .cam-tab:hover { color: var(--text-primary); }
+  .cam-tab.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(255,255,255,0.08);
+  }
+
+  /* SIDE CONTROL DRAWER (UX/UI INSPECTOR) */
+  #inspector {
+    position: fixed;
+    top: 68px;
+    right: 20px;
+    width: 310px;
+    max-height: calc(100vh - 90px);
+    background: var(--panel-bg);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-elevation);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
+  }
+  #inspector.collapsed {
+    transform: translateX(330px);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--panel-border);
+  }
+  .drawer-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+  }
+  .drawer-tabs {
+    display: flex;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.25);
+    padding: 3px;
+    border-radius: var(--radius-sm);
+  }
+  .d-tab {
+    background: transparent;
+    border: none;
+    color: var(--text-tertiary);
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: 0.15s;
+  }
+  .d-tab:hover { color: var(--text-secondary); }
+  .d-tab.active { background: rgba(255, 255, 255, 0.1); color: var(--text-primary); }
+
+  .drawer-body {
+    padding: 14px 18px 20px;
+    overflow-y: auto;
+  }
+  .drawer-body::-webkit-scrollbar { width: 4px; }
+  .drawer-body::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 4px; }
+
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* SECTION HEADERS */
+  .section-label {
+    margin: 14px 0 8px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label:first-child { margin-top: 2px; }
+  .section-label::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--panel-border);
+  }
+
+  /* TOGGLE ROWS */
+  .control-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 0;
+    cursor: pointer;
+  }
+  .control-row span {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+  .control-row:hover span { color: var(--text-primary); }
+  .control-row small {
+    display: block;
+    font-size: 10px;
+    color: var(--text-tertiary);
+    margin-top: 1.5px;
+  }
+  .control-row input[type="checkbox"] { display: none; }
+  .switch {
+    width: 32px;
+    height: 18px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    position: relative;
+    transition: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    flex-shrink: 0;
+  }
+  .switch::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    transition: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .control-row input:checked + .switch {
+    background: var(--accent);
+  }
+  .control-row input:checked + .switch::after {
+    left: 16px;
+    box-shadow: 0 0 8px rgba(94, 234, 212, 0.6);
+  }
+
+  /* SLIDER CONTROLS */
+  .slider-group {
+    padding: 6px 0 10px;
+  }
+  .slider-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+  .slider-header output {
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 11px;
+    color: var(--accent);
+  }
+  .slider-input {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    outline: none;
+  }
+  .slider-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #fff;
+    cursor: pointer;
+    box-shadow: 0 0 8px var(--accent-glow);
+    transition: 0.15s;
+  }
+  .slider-input::-webkit-slider-thumb:hover { transform: scale(1.25); }
+
+  /* PRESET BUTTON GRID */
+  .preset-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .preset-btn {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+  }
+  .preset-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    border-color: var(--panel-border-focus);
+  }
+  .preset-btn.active {
+    background: rgba(94, 234, 212, 0.12);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* TOAST NOTIFICATION */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--panel-border);
+    color: var(--text-primary);
+    padding: 10px 18px;
+    border-radius: var(--radius-md);
+    font-size: 12px;
+    box-shadow: var(--shadow-elevation);
+    transform: translateY(60px);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100;
+  }
+  .toast.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  /* HIDE UI CLASS */
+  .ui-hidden .top-bar,
+  .ui-hidden .camera-dock,
+  .ui-hidden #inspector,
+  .ui-hidden .keyboard-hint {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  .keyboard-hint {
+    position: fixed;
+    left: 20px;
+    bottom: 22px;
+    color: var(--text-tertiary);
+    font-size: 11px;
+    z-index: 10;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  kbd {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: inherit;
+    font-size: 10px;
+    color: var(--text-secondary);
+  }
+</style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+<div class="cinematic-vignette"></div>
+
+<!-- TOP STATUS & TOOLBAR -->
+<header class="top-bar">
+  <div class="brand-group">
+    <div class="brand-badge"></div>
+    <div>
+      <div class="brand-title" id="scene-title">Prism &middot; DEViANCE DESIGN</div>
+      <div class="brand-sub">Modular 3D Studio Architecture</div>
+    </div>
+    <div class="fps-pill" id="fps-display">60 FPS</div>
+  </div>
+
+  <div class="top-actions">
+    <button class="icon-btn" id="btn-snap" title="Take Screenshot (P)">
+      <svg viewBox="0 0 24 24"><path d="M4 4h3l2-2h6l2 2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm8 3a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/></svg>
+    </button>
+    <button class="icon-btn" id="btn-ui-toggle" title="Toggle UI Visibility (H)">
+      <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+    </button>
+    <button class="icon-btn" id="btn-drawer-toggle" title="Inspector Settings">
+      <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84c-.24 0-.44.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- CAMERA PRESETS QUICK DOCK -->
+<nav class="camera-dock" id="cam-dock">
+  <button class="cam-tab active" data-preset="hero">Overview</button>
+  <button class="cam-tab" data-preset="macro">Macro Core</button>
+  <button class="cam-tab" data-preset="orbit">Low Horizon</button>
+  <button class="cam-tab" data-preset="zenith">Zenith</button>
+</nav>
+
+<!-- INSPECTOR CONTROL DRAWER -->
+<aside id="inspector">
+  <div class="drawer-header">
+    <div class="drawer-title">Inspector</div>
+    <div class="drawer-tabs">
+      <button class="d-tab active" data-pane="tab-env">Atmo</button>
+      <button class="d-tab" data-pane="tab-scene">Scene</button>
+      <button class="d-tab" data-pane="tab-render">Render</button>
+    </div>
+  </div>
+
+  <div class="drawer-body">
+    <!-- TAB 1: ENVIRONMENT & LIGHTING -->
+    <div class="tab-pane active" id="tab-env">
+      <div class="section-label">Lighting Moods</div>
+      <div class="preset-grid">
+        <button class="preset-btn active" data-mood="ethereal">Ethereal Dusk</button>
+        <button class="preset-btn" data-mood="cyberpunk">Cyber Neon</button>
+        <button class="preset-btn" data-mood="golden">Solar Zenith</button>
+        <button class="preset-btn" data-mood="monochrome">Minimal Mono</button>
+      </div>
+
+      <div class="section-label">Celestial Controls</div>
+      <div class="slider-group">
+        <div class="slider-header"><span>Sun Elevation</span><output id="val-sun-el">32&deg;</output></div>
+        <input class="slider-input" type="range" id="sl-sun-el" min="5" max="85" step="1" value="32">
+      </div>
+      <div class="slider-group">
+        <div class="slider-header"><span>Light Intensity</span><output id="val-sun-int">2.20</output></div>
+        <input class="slider-input" type="range" id="sl-sun-int" min="0.2" max="4.0" step="0.05" value="2.20">
+      </div>
+      <div class="slider-group">
+        <div class="slider-header"><span>Atmospheric Fog</span><output id="val-fog">0.020</output></div>
+        <input class="slider-input" type="range" id="sl-fog" min="0" max="0.06" step="0.001" value="0.020">
+      </div>
+    </div>
+
+    <!-- TAB 2: SCENE ELEMENTS -->
+    <div class="tab-pane" id="tab-scene">
+      <div class="section-label">Centerpiece Objects</div>
+      <label class="control-row">
+        <span>Monolith Core<small>Prismatic crystal centerpiece</small></span>
+        <input type="checkbox" data-key="core" checked><div class="switch"></div>
+      </label>
+      <label class="control-row">
+        <span>Orbital Rings<small>Kinematic gyroscope armillary</small></span>
+        <input type="checkbox" data-key="rings" checked><div class="switch"></div>
+      </label>
+      <label class="control-row">
+        <span>Reflective Pedestal<small>Mirror floor with contact shadow</small></span>
+        <input type="checkbox" data-key="pedestal" checked><div class="switch"></div>
+      </label>
+
+      <div class="section-label">Atmospherics</div>
+      <label class="control-row">
+        <span>Cosmic Motes<small>Floating ambient luminescence</small></span>
+        <input type="checkbox" data-key="particles" checked><div class="switch"></div>
+      </label>
+      <label class="control-row">
+        <span>Volumetric Aura<small>Subsurface light diffusion</small></span>
+        <input type="checkbox" data-key="aura" checked><div class="switch"></div>
+      </label>
+
+      <div class="section-label">Simulation Speed</div>
+      <div class="slider-group">
+        <div class="slider-header"><span>Kinematics Speed</span><output id="val-speed">1.00&times;</output></div>
+        <input class="slider-input" type="range" id="sl-speed" min="0" max="3" step="0.05" value="1.0">
+      </div>
+    </div>
+
+    <!-- TAB 3: POST-PROCESSING & CAMERA -->
+    <div class="tab-pane" id="tab-render">
+      <div class="section-label">Post-Processing</div>
+      <div class="slider-group">
+        <div class="slider-header"><span>Bloom Intensity</span><output id="val-bloom">0.32</output></div>
+        <input class="slider-input" type="range" id="sl-bloom" min="0" max="1.5" step="0.02" value="0.32">
+      </div>
+      <div class="slider-group">
+        <div class="slider-header"><span>Exposure</span><output id="val-exposure">1.10</output></div>
+        <input class="slider-input" type="range" id="sl-exposure" min="0.4" max="2.2" step="0.02" value="1.10">
+      </div>
+      <div class="slider-group">
+        <div class="slider-header"><span>Chromatic Aberration</span><output id="val-aberr">0.003</output></div>
+        <input class="slider-input" type="range" id="sl-aberr" min="0" max="0.01" step="0.0005" value="0.003">
+      </div>
+
+      <div class="section-label">Camera Motion</div>
+      <label class="control-row">
+        <span>Auto Turntable<small>Continuous subtle orbital drift</small></span>
+        <input type="checkbox" id="chk-autorotate" checked><div class="switch"></div>
+      </label>
+    </div>
+  </div>
+</aside>
+
+<div class="keyboard-hint">
+  <kbd>Space</kbd> Pause &middot; <kbd>H</kbd> Hide UI &middot; <kbd>P</kbd> Snap &middot; <kbd>F</kbd> Fullscreen
+</div>
+
+<div class="toast" id="toast">Screenshot saved</div>
+
+<!-- THREE.JS IMPORT MAP -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+
+/* =========================================================================
+   MODULE 1: SHARED GLSL SHADER NOISE TOOLKIT
+   ========================================================================= */
+const GLSL_NOISE = `
+float hash21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); }
+float noise2(vec2 p){
+  vec2 i = floor(p), f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  float a = hash21(i);
+  float b = hash21(i + vec2(1.0, 0.0));
+  float c = hash21(i + vec2(0.0, 1.0));
+  float d = hash21(i + vec2(1.0, 1.0));
+  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+float hash31(vec3 p){ return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453123); }
+float noise3(vec3 p){
+  vec3 i = floor(p), f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  float n000 = hash31(i);
+  float n100 = hash31(i + vec3(1.0, 0.0, 0.0));
+  float n010 = hash31(i + vec3(0.0, 1.0, 0.0));
+  float n110 = hash31(i + vec3(1.0, 1.0, 0.0));
+  float n001 = hash31(i + vec3(0.0, 0.0, 1.0));
+  float n101 = hash31(i + vec3(1.0, 0.0, 1.0));
+  float n011 = hash31(i + vec3(0.0, 1.0, 1.0));
+  float n111 = hash31(i + vec3(1.0, 1.0, 1.0));
+  return mix(
+    mix(mix(n000, n100, f.x), mix(n010, n110, f.x), f.y),
+    mix(mix(n001, n101, f.x), mix(n011, n111, f.x), f.y), f.z);
+}
+float fbm3(vec3 p){
+  float v = 0.0, a = 0.5;
+  for (int i = 0; i < 4; i++){ v += a * noise3(p); p *= 2.04; a *= 0.48; }
+  return v;
+}
+`;
+
+/* =========================================================================
+   MODULE 2: CORE STUDIO SETUP (Renderer, Camera, Controls)
+   ========================================================================= */
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({
+  canvas,
+  antialias: true,
+  powerPreference: 'high-performance',
+  preserveDrawingBuffer: true // Required for instantaneous screenshots
+});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.10;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const scene = new THREE.Scene();
+
+const FOG_DENSITY = 0.020;
+const FOG_COLOR = new THREE.Color(0x0c1218);
+const fogUniform = { value: FOG_DENSITY };
+scene.fog = new THREE.FogExp2(FOG_COLOR.getHex(), FOG_DENSITY);
+
+const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 800);
+camera.position.set(0, 6.5, 14.5);
+
+const controls = new OrbitControls(camera, canvas);
+controls.target.set(0, 1.2, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.minDistance = 3.0;
+controls.maxDistance = 50.0;
+controls.maxPolarAngle = Math.PI * 0.49;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.35;
+
+/* =========================================================================
+   MODULE 3: LIGHTING & ENVIRONMENT (Mood Presets)
+   ========================================================================= */
+const SUN_DIR = new THREE.Vector3(-0.45, 0.58, -0.68).normalize();
+const SUN_COLOR = new THREE.Color(0xfff1dc);
+
+const hemiLight = new THREE.HemisphereLight(0xa6cde2, 0x181a24, 0.95);
+scene.add(hemiLight);
+
+const mainLight = new THREE.DirectionalLight(SUN_COLOR, 2.2);
+mainLight.position.copy(SUN_DIR).multiplyScalar(40);
+mainLight.castShadow = true;
+mainLight.shadow.mapSize.set(2048, 2048);
+mainLight.shadow.camera.near = 10;
+mainLight.shadow.camera.far = 80;
+mainLight.shadow.camera.left = -16;
+mainLight.shadow.camera.right = 16;
+mainLight.shadow.camera.top = 16;
+mainLight.shadow.camera.bottom = -16;
+mainLight.shadow.bias = -0.0003;
+mainLight.shadow.normalBias = 0.02;
+scene.add(mainLight);
+
+const fillLight = new THREE.DirectionalLight(0x7090b8, 0.65);
+fillLight.position.set(12, 8, 12);
+scene.add(fillLight);
+
+const rimLight = new THREE.DirectionalLight(0x5eead4, 0.55);
+rimLight.position.set(-10, 4, -14);
+scene.add(rimLight);
+
+// Center core point light with animated pulse
+const coreLight = new THREE.PointLight(0x5eead4, 1.8, 18, 2);
+coreLight.position.set(0, 1.8, 0);
+scene.add(coreLight);
+
+// Atmospheric procedural skybox dome
+const skyMaterial = new THREE.ShaderMaterial({
+  side: THREE.BackSide,
+  depthWrite: false,
+  uniforms: {
+    uTop:     { value: new THREE.Color(0x06090e) },
+    uMid:     { value: new THREE.Color(0x16222f) },
+    uHorizon: { value: new THREE.Color(0x422d3d) },
+    uSunDir:  { value: SUN_DIR.clone() },
+    uSunCol:  { value: SUN_COLOR.clone() }
+  },
+  vertexShader: `
+    varying vec3 vDir;
+    void main(){
+      vDir = normalize(position);
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform vec3 uTop, uMid, uHorizon, uSunDir, uSunCol;
+    varying vec3 vDir;
+    void main(){
+      vec3 d = normalize(vDir);
+      vec3 col = mix(uHorizon, uMid, smoothstep(-0.05, 0.32, d.y));
+      col = mix(col, uTop, smoothstep(0.18, 0.85, d.y));
+
+      // Sun aureole
+      float sd = max(dot(d, uSunDir), 0.0);
+      col += uSunCol * pow(sd, 350.0) * 3.5;
+      col += uSunCol * pow(sd, 32.0) * 0.25;
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `
+});
+
+const skyDome = new THREE.Mesh(new THREE.SphereGeometry(350, 32, 24), skyMaterial);
+skyDome.renderOrder = -1;
+scene.add(skyDome);
+
+// PMREM Environment probe for realistic IBL reflections
+{
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const envScene = new THREE.Scene();
+  envScene.add(new THREE.Mesh(new THREE.SphereGeometry(40, 24, 16), skyMaterial));
+  const rt = pmrem.fromScene(envScene, 0.04, 0.1, 120);
+  scene.environment = rt.texture;
+  pmrem.dispose();
+}
+
+/* =========================================================================
+   MODULE 4: SCENE ELEMENTS (Modular Centerpiece, Pedestal, Kinematics)
+   ========================================================================= */
+const sceneRegistry = {
+  core: null,
+  rings: null,
+  pedestal: null,
+  particles: null,
+  aura: null
+};
+
+// 1. REFLECTIVE PEDESTAL & GROUND PLANE
+{
+  const pedGroup = new THREE.Group();
+  scene.add(pedGroup);
+  sceneRegistry.pedestal = pedGroup;
+
+  // Main reflecting ground floor
+  const floorGeo = new THREE.CircleGeometry(24, 64);
+  floorGeo.rotateX(-Math.PI / 2);
+
+  const floorMat = new THREE.MeshStandardMaterial({
+    color: 0x0c1117,
+    roughness: 0.18,
+    metalness: 0.82,
+    envMapIntensity: 1.3
+  });
+  const floorMesh = new THREE.Mesh(floorGeo, floorMat);
+  floorMesh.position.y = 0.0;
+  floorMesh.receiveShadow = true;
+  pedGroup.add(floorMesh);
+
+  // Concentric stepped dais
+  const daisMat = new THREE.MeshStandardMaterial({
+    color: 0x161d26,
+    roughness: 0.35,
+    metalness: 0.65
+  });
+  const dais1 = new THREE.Mesh(new THREE.CylinderGeometry(5.2, 5.5, 0.22, 48), daisMat);
+  dais1.position.y = 0.11;
+  dais1.receiveShadow = true;
+  dais1.castShadow = true;
+  pedGroup.add(dais1);
+
+  const dais2 = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 3.5, 0.26, 48), daisMat);
+  dais2.position.y = 0.34;
+  dais2.receiveShadow = true;
+  dais2.castShadow = true;
+  pedGroup.add(dais2);
+}
+
+// 2. PRISMATIC CRYSTAL MONOLITH (Centerpiece with Dispersion Shader)
+{
+  const coreGroup = new THREE.Group();
+  scene.add(coreGroup);
+  sceneRegistry.core = coreGroup;
+
+  // Sculpted faceted crystal geometry
+  const crystalGeo = new THREE.OctahedronGeometry(1.65, 0);
+  crystalGeo.scale(1.0, 1.85, 1.0);
+
+  const crystalMat = new THREE.ShaderMaterial({
+    side: THREE.DoubleSide,
+    uniforms: {
+      uTime:     { value: 0 },
+      uSunDir:   { value: SUN_DIR.clone() },
+      uSunColor: { value: SUN_COLOR.clone() },
+      uColor1:   { value: new THREE.Color(0x5eead4) },
+      uColor2:   { value: new THREE.Color(0x818cf8) },
+      uColor3:   { value: new THREE.Color(0xf43f5e) }
+    },
+    vertexShader: `
+      varying vec3 vWorldPos;
+      varying vec3 vNorm;
+      varying vec3 vViewDir;
+      void main(){
+        vec4 wp = modelMatrix * vec4(position, 1.0);
+        vWorldPos = wp.xyz;
+        vNorm = normalize(mat3(modelMatrix) * normal);
+        vViewDir = normalize(cameraPosition - wp.xyz);
+        gl_Position = projectionMatrix * viewMatrix * wp;
+      }
+    `,
+    fragmentShader: `
+      uniform float uTime;
+      uniform vec3 uSunDir, uSunColor, uColor1, uColor2, uColor3;
+      varying vec3 vWorldPos;
+      varying vec3 vNorm;
+      varying vec3 vViewDir;
+
+      void main(){
+        vec3 N = normalize(vNorm);
+        vec3 V = normalize(vViewDir);
+
+        // Thin-film prismatic iridescence
+        float cosTheta = clamp(dot(N, V), 0.0, 1.0);
+        float fres = pow(1.0 - cosTheta, 3.5);
+
+        // Dispersion color blend
+        float t = sin(cosTheta * 6.28 + uTime * 0.8) * 0.5 + 0.5;
+        vec3 prism = mix(uColor1, uColor2, t);
+        prism = mix(prism, uColor3, fres * 0.7);
+
+        // Lighting & specular
+        float ndl = max(dot(N, uSunDir), 0.0);
+        vec3 H = normalize(uSunDir + V);
+        float spec = pow(max(dot(N, H), 0.0), 90.0) * 1.8;
+
+        // Internal luminescence
+        vec3 lit = prism * (0.45 + ndl * 0.9) + uSunColor * spec;
+        lit += prism * fres * 1.2;
+
+        gl_FragColor = vec4(lit, 0.92);
+      }
+    `,
+    transparent: true
+  });
+
+  const crystalMesh = new THREE.Mesh(crystalGeo, crystalMat);
+  crystalMesh.position.y = 2.4;
+  crystalMesh.castShadow = true;
+  coreGroup.add(crystalMesh);
+  coreGroup.userData.mesh = crystalMesh;
+  coreGroup.userData.mat = crystalMat;
+}
+
+// 3. GYROSCOPIC ORBITAL RINGS
+{
+  const ringsGroup = new THREE.Group();
+  scene.add(ringsGroup);
+  sceneRegistry.rings = ringsGroup;
+  ringsGroup.position.y = 2.4;
+
+  const ringMat = new THREE.MeshStandardMaterial({
+    color: 0x94a3b8,
+    roughness: 0.22,
+    metalness: 0.92,
+    envMapIntensity: 1.8
+  });
+
+  const r1 = new THREE.Mesh(new THREE.TorusGeometry(2.4, 0.04, 16, 96), ringMat);
+  const r2 = new THREE.Mesh(new THREE.TorusGeometry(2.8, 0.035, 16, 96), ringMat);
+  const r3 = new THREE.Mesh(new THREE.TorusGeometry(3.2, 0.03, 16, 96), ringMat);
+
+  r1.castShadow = true;
+  r2.castShadow = true;
+  r3.castShadow = true;
+
+  ringsGroup.add(r1);
+  ringsGroup.add(r2);
+  ringsGroup.add(r3);
+  ringsGroup.userData = { r1, r2, r3 };
+}
+
+// 4. FLOATING PARTICLES (Celestial Motes)
+{
+  const N = 700;
+  const pos = new Float32Array(N * 3);
+  const seeds = new Float32Array(N);
+
+  for (let i = 0; i < N; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const r = Math.sqrt(Math.random()) * 14;
+    pos[i * 3]     = Math.cos(a) * r;
+    pos[i * 3 + 1] = 0.4 + Math.pow(Math.random(), 1.4) * 7.5;
+    pos[i * 3 + 2] = Math.sin(a) * r;
+    seeds[i] = Math.random();
+  }
+
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 1));
+
+  const pMat = new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    uniforms: {
+      uTime:  { value: 0 },
+      uScale: { value: window.innerHeight * 0.028 }
+    },
+    vertexShader: `
+      uniform float uTime, uScale;
+      attribute float aSeed;
+      varying float vA;
+      varying vec3 vCol;
+      void main(){
+        vec3 p = position;
+        float t = uTime * 0.24 + aSeed * 10.0;
+        p.x += sin(t) * 0.6;
+        p.y += sin(t * 1.4) * 0.35;
+        p.z += cos(t * 0.8) * 0.6;
+
+        vec4 mv = modelViewMatrix * vec4(p, 1.0);
+        gl_Position = projectionMatrix * mv;
+        gl_PointSize = (2.0 + aSeed * 4.0) * uScale / -mv.z;
+
+        vCol = mix(vec3(0.37, 0.92, 0.83), vec3(0.51, 0.55, 0.97), aSeed);
+        float twinkle = sin(uTime * 2.5 + aSeed * 30.0) * 0.5 + 0.5;
+        vA = (0.2 + twinkle * 0.6) * 0.65;
+      }
+    `,
+    fragmentShader: `
+      varying float vA;
+      varying vec3 vCol;
+      void main(){
+        vec2 c = gl_PointCoord - 0.5;
+        float d = dot(c, c) * 4.0;
+        if (d > 1.0) discard;
+        float alpha = pow(max(0.0, 1.0 - d), 2.2) * vA;
+        gl_FragColor = vec4(vCol, alpha);
+      }
+    `
+  });
+
+  const particles = new THREE.Points(g, pMat);
+  particles.renderOrder = 2;
+  scene.add(particles);
+  sceneRegistry.particles = particles;
+}
+
+// 5. VOLUMETRIC AURA SHOCKWAVE DISC
+{
+  const auraGeo = new THREE.RingGeometry(0.1, 4.2, 64);
+  auraGeo.rotateX(-Math.PI / 2);
+
+  const auraMat = new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide,
+    uniforms: {
+      uTime: { value: 0 }
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      void main(){
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform float uTime;
+      varying vec2 vUv;
+      void main(){
+        float r = length(vUv - 0.5) * 2.0;
+        if (r > 1.0) discard;
+        float wave = sin(r * 18.0 - uTime * 3.5) * 0.5 + 0.5;
+        float alpha = pow(1.0 - r, 2.0) * wave * 0.35;
+        vec3 col = mix(vec3(0.37, 0.92, 0.83), vec3(0.51, 0.55, 0.97), r);
+        gl_FragColor = vec4(col, alpha);
+      }
+    `
+  });
+
+  const auraMesh = new THREE.Mesh(auraGeo, auraMat);
+  auraMesh.position.y = 0.48;
+  scene.add(auraMesh);
+  sceneRegistry.aura = auraMesh;
+}
+
+/* =========================================================================
+   MODULE 5: POST-PROCESSING PIPELINE
+   ========================================================================= */
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+
+const bloomPass = new UnrealBloomPass(
+  new THREE.Vector2(window.innerWidth, window.innerHeight),
+  0.32,  // strength
+  0.65,  // radius
+  0.82   // threshold
+);
+composer.addPass(bloomPass);
+
+// Master Color Grading & Chromatic Aberration Shader
+const gradingShader = {
+  uniforms: {
+    tDiffuse: { value: null },
+    uExposure: { value: 1.10 },
+    uAberr: { value: 0.003 }
+  },
+  vertexShader: `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform sampler2D tDiffuse;
+    uniform float uExposure, uAberr;
+    varying vec2 vUv;
+
+    void main() {
+      vec2 distFromCenter = vUv - 0.5;
+      float d2 = dot(distFromCenter, distFromCenter);
+
+      // Chromatic fringe
+      vec2 offset = distFromCenter * d2 * uAberr;
+      float r = texture2D(tDiffuse, vUv + offset).r;
+      float g = texture2D(tDiffuse, vUv).g;
+      float b = texture2D(tDiffuse, vUv - offset).b;
+
+      vec3 col = vec3(r, g, b) * uExposure;
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `
+};
+const gradingPass = new ShaderPass(gradingShader);
+composer.addPass(gradingPass);
+composer.addPass(new OutputPass());
+
+/* =========================================================================
+   MODULE 6: CAMERA PRESETS & TRANSITION ANIMATOR
+   ========================================================================= */
+const CAMERA_PRESETS = {
+  hero: {
+    pos: new THREE.Vector3(0, 6.5, 14.5),
+    target: new THREE.Vector3(0, 1.8, 0),
+    fov: 40
+  },
+  macro: {
+    pos: new THREE.Vector3(1.8, 2.7, 3.4),
+    target: new THREE.Vector3(0, 2.4, 0),
+    fov: 34
+  },
+  orbit: {
+    pos: new THREE.Vector3(-10.5, 1.8, 11.2),
+    target: new THREE.Vector3(0, 2.0, 0),
+    fov: 42
+  },
+  zenith: {
+    pos: new THREE.Vector3(0.01, 19.5, 0.01),
+    target: new THREE.Vector3(0, 1.8, 0),
+    fov: 45
+  }
+};
+
+let camTransition = null;
+function transitionToPreset(presetKey) {
+  const p = CAMERA_PRESETS[presetKey];
+  if (!p) return;
+
+  camTransition = {
+    startPos: camera.position.clone(),
+    endPos: p.pos.clone(),
+    startTarget: controls.target.clone(),
+    endTarget: p.target.clone(),
+    progress: 0,
+    duration: 1.2
+  };
+}
+
+/* =========================================================================
+   MODULE 7: LIGHTING MOOD PRESETS
+   ========================================================================= */
+const MOOD_PRESETS = {
+  ethereal: {
+    sunColor: 0xfff1dc,
+    sunDir: [-0.45, 0.58, -0.68],
+    sunIntensity: 2.2,
+    fogColor: 0x0c1218,
+    fogDensity: 0.020,
+    coreLight: 0x5eead4,
+    skyTop: 0x06090e,
+    skyMid: 0x16222f,
+    skyHorizon: 0x422d3d
+  },
+  cyberpunk: {
+    sunColor: 0xff3b81,
+    sunDir: [0.65, 0.42, 0.65],
+    sunIntensity: 2.6,
+    fogColor: 0x0d0614,
+    fogDensity: 0.028,
+    coreLight: 0x00f0ff,
+    skyTop: 0x07010e,
+    skyMid: 0x1e0428,
+    skyHorizon: 0x560842
+  },
+  golden: {
+    sunColor: 0xffe2a3,
+    sunDir: [-0.2, 0.78, -0.6],
+    sunIntensity: 3.2,
+    fogColor: 0x1c1712,
+    fogDensity: 0.014,
+    coreLight: 0xffb84d,
+    skyTop: 0x142033,
+    skyMid: 0x3d506d,
+    skyHorizon: 0xd99557
+  },
+  monochrome: {
+    sunColor: 0xffffff,
+    sunDir: [0.0, 0.85, -0.5],
+    sunIntensity: 2.0,
+    fogColor: 0x080808,
+    fogDensity: 0.022,
+    coreLight: 0xffffff,
+    skyTop: 0x020202,
+    skyMid: 0x141414,
+    skyHorizon: 0x383838
+  }
+};
+
+function applyMood(key) {
+  const m = MOOD_PRESETS[key];
+  if (!m) return;
+
+  mainLight.color.setHex(m.sunColor);
+  mainLight.position.set(m.sunDir[0], m.sunDir[1], m.sunDir[2]).multiplyScalar(40);
+  mainLight.intensity = m.sunIntensity;
+
+  scene.fog.color.setHex(m.fogColor);
+  scene.fog.density = m.fogDensity;
+  fogUniform.value = m.fogDensity;
+
+  coreLight.color.setHex(m.coreLight);
+
+  skyMaterial.uniforms.uTop.value.setHex(m.skyTop);
+  skyMaterial.uniforms.uMid.value.setHex(m.skyMid);
+  skyMaterial.uniforms.uHorizon.value.setHex(m.skyHorizon);
+  skyMaterial.uniforms.uSunCol.value.setHex(m.sunColor);
+
+  document.getElementById('sl-sun-int').value = m.sunIntensity;
+  document.getElementById('val-sun-int').textContent = m.sunIntensity.toFixed(2);
+  document.getElementById('sl-fog').value = m.fogDensity;
+  document.getElementById('val-fog').textContent = m.fogDensity.toFixed(3);
+}
+
+/* =========================================================================
+   MODULE 8: USER INTERACTION & UI CONTROLS
+   ========================================================================= */
+const state = {
+  speed: 1.0,
+  paused: false
+};
+
+// Camera Tabs
+document.querySelectorAll('.cam-tab').forEach(btn => {
+  btn.addEventListener('click', e => {
+    document.querySelectorAll('.cam-tab').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    transitionToPreset(e.target.dataset.preset);
+  });
+});
+
+// Mood Preset Buttons
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', e => {
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    applyMood(e.target.dataset.mood);
+  });
+});
+
+// Drawer Navigation Tabs
+document.querySelectorAll('.d-tab').forEach(btn => {
+  btn.addEventListener('click', e => {
+    document.querySelectorAll('.d-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    e.target.classList.add('active');
+    document.getElementById(e.target.dataset.pane).classList.add('active');
+  });
+});
+
+// Scene Object Checkboxes
+document.querySelectorAll('#tab-scene input[type="checkbox"]').forEach(chk => {
+  chk.addEventListener('change', e => {
+    const key = e.target.dataset.key;
+    if (sceneRegistry[key]) {
+      sceneRegistry[key].visible = e.target.checked;
+    }
+  });
+});
+
+// Auto-rotate toggle
+document.getElementById('chk-autorotate').addEventListener('change', e => {
+  controls.autoRotate = e.target.checked;
+});
+
+// Sliders binder helper
+function bindSlider(id, outId, formatFn, callback) {
+  const input = document.getElementById(id);
+  const out = document.getElementById(outId);
+  input.addEventListener('input', () => {
+    const val = parseFloat(input.value);
+    out.textContent = formatFn(val);
+    callback(val);
+  });
+}
+
+bindSlider('sl-sun-el', 'val-sun-el', v => `${v|0}°`, v => {
+  const rad = (v * Math.PI) / 180;
+  mainLight.position.y = 40 * Math.sin(rad);
+  mainLight.position.z = -40 * Math.cos(rad);
+});
+bindSlider('sl-sun-int', 'val-sun-int', v => v.toFixed(2), v => { mainLight.intensity = v; });
+bindSlider('sl-fog', 'val-fog', v => v.toFixed(3), v => { scene.fog.density = v; fogUniform.value = v; });
+bindSlider('sl-speed', 'val-speed', v => `${v.toFixed(2)}×`, v => { state.speed = v; });
+bindSlider('sl-bloom', 'val-bloom', v => v.toFixed(2), v => { bloomPass.strength = v; });
+bindSlider('sl-exposure', 'val-exposure', v => v.toFixed(2), v => {
+  renderer.toneMappingExposure = v;
+  gradingShader.uniforms.uExposure.value = v;
+});
+bindSlider('sl-aberr', 'val-aberr', v => v.toFixed(4), v => { gradingShader.uniforms.uAberr.value = v; });
+
+// Top Action Buttons
+const inspector = document.getElementById('inspector');
+document.getElementById('btn-drawer-toggle').addEventListener('click', () => {
+  inspector.classList.toggle('collapsed');
+});
+
+let uiHidden = false;
+const btnUiToggle = document.getElementById('btn-ui-toggle');
+btnUiToggle.addEventListener('click', () => {
+  uiHidden = !uiHidden;
+  document.body.classList.toggle('ui-hidden', uiHidden);
+});
+
+// Toast notification helper
+const toastEl = document.getElementById('toast');
+function showToast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  setTimeout(() => toastEl.classList.remove('show'), 2200);
+}
+
+// Screenshot capture
+document.getElementById('btn-snap').addEventListener('click', takeSnapshot);
+
+function takeSnapshot() {
+  composer.render();
+  const dataURL = canvas.toDataURL('image/png');
+  const a = document.createElement('a');
+  a.href = dataURL;
+  a.download = `scene_${Date.now()}.png`;
+  a.click();
+  showToast('Screenshot saved to downloads');
+}
+
+// Global Keyboard Shortcuts
+window.addEventListener('keydown', e => {
+  if (e.code === 'Space') {
+    state.paused = !state.paused;
+    showToast(state.paused ? 'Simulation Paused' : 'Simulation Resumed');
+  } else if (e.code === 'KeyH') {
+    uiHidden = !uiHidden;
+    document.body.classList.toggle('ui-hidden', uiHidden);
+  } else if (e.code === 'KeyP') {
+    takeSnapshot();
+  } else if (e.code === 'KeyF') {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  } else if (e.key >= '1' && e.key <= '4') {
+    const keys = ['hero', 'macro', 'orbit', 'zenith'];
+    const idx = parseInt(e.key) - 1;
+    if (keys[idx]) {
+      document.querySelectorAll('.cam-tab').forEach((b, i) => b.classList.toggle('active', i === idx));
+      transitionToPreset(keys[idx]);
+    }
+  }
+});
+
+/* =========================================================================
+   MODULE 9: ANIMATION & RENDER LOOP
+   ========================================================================= */
+const clock = new THREE.Clock();
+let simTime = 0;
+let frameCount = 0;
+let lastFpsTime = performance.now();
+const fpsDisplay = document.getElementById('fps-display');
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  const delta = clock.getDelta();
+  if (!state.paused) {
+    simTime += delta * state.speed;
+  }
+
+  // Smooth Camera Preset Tweening
+  if (camTransition) {
+    camTransition.progress += delta / camTransition.duration;
+    const t = Math.min(camTransition.progress, 1.0);
+    // Smooth cubic ease-in-out curve
+    const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+    camera.position.lerpVectors(camTransition.startPos, camTransition.endPos, ease);
+    controls.target.lerpVectors(camTransition.startTarget, camTransition.endTarget, ease);
+
+    if (t >= 1.0) {
+      camTransition = null;
+    }
+  }
+
+  // Animate Centerpiece Kinematics
+  if (sceneRegistry.core && sceneRegistry.core.visible) {
+    const m = sceneRegistry.core.userData.mesh;
+    const mat = sceneRegistry.core.userData.mat;
+    if (m) {
+      m.rotation.y = simTime * 0.45;
+      m.position.y = 2.4 + Math.sin(simTime * 1.6) * 0.14;
+    }
+    if (mat) {
+      mat.uniforms.uTime.value = simTime;
+    }
+  }
+
+  // Animate Gyroscopic Rings
+  if (sceneRegistry.rings && sceneRegistry.rings.visible) {
+    const { r1, r2, r3 } = sceneRegistry.rings.userData;
+    if (r1) { r1.rotation.x = simTime * 0.6; r1.rotation.y = simTime * 0.3; }
+    if (r2) { r2.rotation.y = -simTime * 0.5; r2.rotation.z = simTime * 0.4; }
+    if (r3) { r3.rotation.z = simTime * 0.4; r3.rotation.x = -simTime * 0.5; }
+  }
+
+  // Animate Particles & Aura
+  if (sceneRegistry.particles && sceneRegistry.particles.visible) {
+    sceneRegistry.particles.material.uniforms.uTime.value = simTime;
+    sceneRegistry.particles.material.uniforms.uScale.value = window.innerHeight * 0.028;
+  }
+  if (sceneRegistry.aura && sceneRegistry.aura.visible) {
+    sceneRegistry.aura.material.uniforms.uTime.value = simTime;
+  }
+
+  // Core Light Pulsing
+  coreLight.intensity = 1.8 + Math.sin(simTime * 2.8) * 0.45;
+
+  controls.update();
+  composer.render();
+
+  // FPS Counter
+  frameCount++;
+  const now = performance.now();
+  if (now - lastFpsTime >= 1000) {
+    fpsDisplay.textContent = `${frameCount} FPS`;
+    frameCount = 0;
+    lastFpsTime = now;
+  }
+}
+
+animate();
+
+/* =========================================================================
+   MODULE 10: RESPONSIVE RESIZE
+   ========================================================================= */
+window.addEventListener('resize', () => {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+  composer.setSize(w, h);
+  bloomPass.resolution.set(w, h);
+});
+</script>
+</body>
+</html>
