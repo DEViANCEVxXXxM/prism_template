@@ -1,7 +1,10 @@
 # Prism Studio
 
 Independent interactive visualization with DEVIANCE / ATELIER Solo UI.
-Open on [GitHub Pages](https://deviancevxxxxm.github.io/prism_template/)
+
+## Try it
+
+Open on [GitHub Pages](https://deviancevxxxxm.github.io/prism/)
 
 ## Run locally
 
