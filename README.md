@@ -4,7 +4,7 @@ Independent interactive visualization with DEVIANCE / ATELIER Solo UI.
 
 ## Try it
 
-Open on [GitHub Pages](https://deviancevxxxxm.github.io/prism/)
+Open on [GitHub Pages](https://deviancevxxxxm.github.io/prism_template/)
 
 ## Run locally
 
