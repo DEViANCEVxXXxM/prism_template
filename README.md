@@ -1,28 +1,25 @@
-# Prism
+# Prism Studio
 
-A template for 3d visualisation.
+Independent interactive visualization with DEVIANCE / ATELIER Solo UI.
 
-## What it is
+## Run locally
 
-todo
+For best compatibility (especially ES modules/import maps), serve this directory over HTTP:
 
-## How to use
-0. [Try on Pages](https://deviancevxxxxm.github.io/koipond/)
-   
-   or
-   
-1. Download or clone this repository.
-2. Open `index.html` in a web browser.
-3. Drag to rotate the view.
-4. Scroll to zoom in and out.
+```bash
+python -m http.server 8000
+```
 
-No install or server is needed.
+Then open `http://localhost:8000/`. Static GitHub Pages deployment also works.
 
-## Controls
-todo
+## Structure
 
-## Files
-- `index.html` — the main page.
+- `index.html` — original Prism Studio scene logic, shaders and page markup
+- `assets/atelier-ui.css` — shared reusable UI design system (local copy)
+- `assets/atelier-ui.js` — independent, scene-agnostic UI enhancement (local copy)
 
-## License
-There is no license file. Please ask the repository owner before reusing or sharing this project.
+## Design
+
+Accent: `#5eead4` · Interactive spatial architecture.
+
+This repository is fully separate from the other demonstrations: no scene picker or outgoing project-to-project navigation. The original simulation code is unchanged. Original third-party CDN imports, where present, still require internet access.
